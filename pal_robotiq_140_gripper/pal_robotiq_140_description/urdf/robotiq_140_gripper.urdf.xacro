@@ -220,28 +220,46 @@
     </joint>
   </xacro:macro>
 
-  <xacro:macro name="inner_knuckle_joint" params="prefix fingerprefix reflect">
-    <joint name="${prefix}${fingerprefix}_inner_knuckle_joint" type="revolute">
-      <origin xyz="0 ${reflect * -0.0127} 0.06142" rpy="${pi / 2 + .725} 0 ${(reflect - 1) * pi / 2}" />
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}${fingerprefix}_inner_knuckle" />
-      <axis xyz="1 0 0" />
-      <limit lower="-0.8757" upper="0.8757" velocity="2" effort="0.12" />
-      <mimic joint="${prefix}finger_joint" multiplier="-1" offset="0" />
-    </joint>
-    <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}${fingerprefix}mimic_robotiq_85_1" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}${fingerprefix}_inner_knuckle_joint" has_pid="false" multiplier="-1.0" offset="0.0"/>
+  <xacro:macro name="inner_knuckle_joint" params="prefix fingerprefix reflect fix_all">
+    <xacro:if value="${fix_all}">
+      <joint name="${prefix}${fingerprefix}_inner_knuckle_joint" type="fixed">
+        <origin xyz="0 ${reflect * -0.0127} 0.06142" rpy="${pi / 2 + .725} 0 ${(reflect - 1) * pi / 2}" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}${fingerprefix}_inner_knuckle" />
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${fix_all}">
+      <joint name="${prefix}${fingerprefix}_inner_knuckle_joint" type="revolute">
+        <origin xyz="0 ${reflect * -0.0127} 0.06142" rpy="${pi / 2 + .725} 0 ${(reflect - 1) * pi / 2}" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}${fingerprefix}_inner_knuckle" />
+        <axis xyz="1 0 0" />
+        <limit lower="-0.8757" upper="0.8757" velocity="2" effort="0.12" />
+        <mimic joint="${prefix}finger_joint" multiplier="-1" offset="0" />
+      </joint>
+      <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}${fingerprefix}mimic_robotiq_85_1" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}${fingerprefix}_inner_knuckle_joint" has_pid="false" multiplier="-1.0" offset="0.0"/>
+    </xacro:unless>
   </xacro:macro>
 
-  <xacro:macro name="inner_finger_joint" params="prefix fingerprefix">
-    <joint name="${prefix}${fingerprefix}_inner_finger_joint" type="revolute">
-      <origin xyz="0 0.0817554015893473 -0.0282203446692936" rpy="-0.725 0 0" />
-      <parent link="${prefix}${fingerprefix}_outer_finger" />
-      <child link="${prefix}${fingerprefix}_inner_finger" />
-      <axis xyz="1 0 0" />
-      <limit lower="-0.8757" upper="0.8757" velocity="2" effort="0.12" />
-      <mimic joint="${prefix}finger_joint" multiplier="1" offset="0" />
-    </joint>
-    <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}${fingerprefix}mimic_robotiq_85_1" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}${fingerprefix}_inner_finger_joint" has_pid="false" multiplier="1.0" offset="0.0"/>
+  <xacro:macro name="inner_finger_joint" params="prefix fingerprefix fix_all">
+    <xacro:if value="${fix_all}">
+      <joint name="${prefix}${fingerprefix}_inner_finger_joint" type="fixed">
+        <origin xyz="0 0.0817554015893473 -0.0282203446692936" rpy="-0.725 0 0" />
+        <parent link="${prefix}${fingerprefix}_outer_finger" />
+        <child link="${prefix}${fingerprefix}_inner_finger" />
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${fix_all}">
+      <joint name="${prefix}${fingerprefix}_inner_finger_joint" type="revolute">
+        <origin xyz="0 0.0817554015893473 -0.0282203446692936" rpy="-0.725 0 0" />
+        <parent link="${prefix}${fingerprefix}_outer_finger" />
+        <child link="${prefix}${fingerprefix}_inner_finger" />
+        <axis xyz="1 0 0" />
+        <limit lower="-0.8757" upper="0.8757" velocity="2" effort="0.12" />
+        <mimic joint="${prefix}finger_joint" multiplier="1" offset="0" />
+      </joint>
+      <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}${fingerprefix}mimic_robotiq_85_1" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}${fingerprefix}_inner_finger_joint" has_pid="false" multiplier="1.0" offset="0.0"/>
+    </xacro:unless>
   </xacro:macro>
 
   <xacro:macro name="inner_finger_pad_joint" params="prefix fingerprefix">
@@ -327,10 +345,10 @@
     </joint>
   </xacro:macro>
 
-  <xacro:macro name="finger_joints" params="prefix fingerprefix reflect">
+  <xacro:macro name="finger_joints" params="prefix fingerprefix reflect fix_all">
     <xacro:outer_finger_joint prefix="${prefix}" fingerprefix="${fingerprefix}"/>
-    <xacro:inner_knuckle_joint prefix="${prefix}" fingerprefix="${fingerprefix}" reflect="${reflect}"/>
-    <xacro:inner_finger_joint prefix="${prefix}" fingerprefix="${fingerprefix}"/>
+    <xacro:inner_knuckle_joint prefix="${prefix}" fingerprefix="${fingerprefix}" reflect="${reflect}" fix_all="${fix_all}"/>
+    <xacro:inner_finger_joint prefix="${prefix}" fingerprefix="${fingerprefix}" fix_all="${fix_all}"/>
     <xacro:inner_finger_pad_joint prefix="${prefix}" fingerprefix="${fingerprefix}"/>
   </xacro:macro>
 
@@ -342,36 +360,54 @@
     <xacro:inner_knuckle prefix="${prefix}" fingerprefix="${fingerprefix}" stroke="${stroke}"/>
   </xacro:macro>
 
-  <xacro:macro name="finger_joint" params="prefix">
-    <joint name="${prefix}finger_joint" type="revolute">
-      <origin xyz="0 -0.030601 0.054905" rpy="${pi / 2 + .725} 0 0" />
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}left_outer_knuckle" />
-      <axis xyz="-1 0 0" />
-      <limit lower="0" upper="0.7" velocity="2" effort="0.12" />
-      <dynamics damping="0.03"/>
-    </joint>
-    <gazebo reference="${prefix}finger_joint">
-      <implicitSpringDamper>1</implicitSpringDamper>
-      <provideFeedback>1</provideFeedback>
-    </gazebo>
-    <xacro:finger_joints prefix="${prefix}" fingerprefix="left" reflect="1.0"/>
+  <xacro:macro name="finger_joint" params="prefix fix_all">
+    <xacro:if value="${fix_all}">
+      <joint name="${prefix}finger_joint" type="fixed">
+        <origin xyz="0 -0.030601 0.054905" rpy="${pi / 2 + .725} 0 0" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}left_outer_knuckle" />
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${fix_all}">
+      <joint name="${prefix}finger_joint" type="revolute">
+        <origin xyz="0 -0.030601 0.054905" rpy="${pi / 2 + .725} 0 0" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}left_outer_knuckle" />
+        <axis xyz="-1 0 0" />
+        <limit lower="0" upper="0.7" velocity="2" effort="0.12" />
+        <dynamics damping="0.03"/>
+      </joint>
+      <gazebo reference="${prefix}finger_joint">
+        <implicitSpringDamper>1</implicitSpringDamper>
+        <provideFeedback>1</provideFeedback>
+      </gazebo>
+    </xacro:unless>
+    <xacro:finger_joints prefix="${prefix}" fingerprefix="left" reflect="1.0" fix_all="${fix_all}"/>
   </xacro:macro>
 
-  <xacro:macro name="right_outer_knuckle_joint" params="prefix">
-    <joint name="${prefix}right_outer_knuckle_joint" type="revolute">
-      <origin xyz="0 0.030601 0.054905" rpy="${pi / 2 + .725} 0 ${pi}" />
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}right_outer_knuckle" />
-      <axis xyz="1 0 0" />
-      <limit lower="-0.725" upper="0.725" velocity="2" effort="0.12" />
-    <mimic joint="${prefix}finger_joint" multiplier="-1" offset="0" />
-    </joint>
-    <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}mimic_robotiq_85_5" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}right_outer_knuckle_joint" has_pid="false" multiplier="-1.0" offset="0.0"/>
-    <xacro:finger_joints prefix="${prefix}" fingerprefix="right" reflect="-1.0"/>
+  <xacro:macro name="right_outer_knuckle_joint" params="prefix fix_all">
+    <xacro:if value="${fix_all}">
+      <joint name="${prefix}right_outer_knuckle_joint" type="fixed">
+        <origin xyz="0 0.030601 0.054905" rpy="${pi / 2 + .725} 0 ${pi}" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}right_outer_knuckle" />
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${fix_all}">
+      <joint name="${prefix}right_outer_knuckle_joint" type="revolute">
+        <origin xyz="0 0.030601 0.054905" rpy="${pi / 2 + .725} 0 ${pi}" />
+        <parent link="${prefix}base_link" />
+        <child link="${prefix}right_outer_knuckle" />
+        <axis xyz="1 0 0" />
+        <limit lower="-0.725" upper="0.725" velocity="2" effort="0.12" />
+        <mimic joint="${prefix}finger_joint" multiplier="-1" offset="0" />
+      </joint>
+      <xacro:mimic_joint_plugin_gazebo name_prefix="${prefix}mimic_robotiq_85_5" parent_joint="${prefix}finger_joint" mimic_joint="${prefix}right_outer_knuckle_joint" has_pid="false" multiplier="-1.0" offset="0.0"/>
+    </xacro:unless>
+    <xacro:finger_joints prefix="${prefix}" fingerprefix="right" reflect="-1.0" fix_all="${fix_all}"/>
   </xacro:macro>
 
-  <xacro:macro name="robotiq_140_gripper" params="prefix parent *origin">
+  <xacro:macro name="robotiq_140_gripper" params="prefix parent fix_all:=false *origin">
     <xacro:base_link prefix="${prefix}"/>
     
     <xacro:pal_robotiq_grasping_frames prefix="${prefix}" xyz="0 0 0.14"/>
@@ -379,14 +415,17 @@
     <xacro:pal_robotiq_coupling_link prefix="${prefix}"/>
     <xacro:finger_links prefix="${prefix}" fingerprefix="left" stroke="140"/>
     <xacro:finger_links prefix="${prefix}" fingerprefix="right" stroke="140"/>
-    <xacro:robotiq_base_joint prefix="${prefix}" />
+    <xacro:robotiq_base_joint prefix="${prefix}"/>
     <xacro:pal_robotiq_coupling_joint prefix="${prefix}" parent="${parent}">
       <xacro:insert_block name="origin" />
     </xacro:pal_robotiq_coupling_joint>
-    <xacro:finger_joint prefix="${prefix}"/>
-    <xacro:right_outer_knuckle_joint prefix="${prefix}"/>
-    <xacro:robotiq_140_gripper_transmission prefix="${prefix}"/>
-    <!--This xacro is used to be able to grasp object in simulmation more robustly, it could cause segfault at grasping time -->
-    <xacro:gazebo_gripper_grasp name="${prefix}grasp" name_prefix_left="${prefix}left_inner_finger" name_prefix_right="${prefix}right_inner_finger" parent_joint="${parent}"/>
+    <xacro:finger_joint prefix="${prefix}" fix_all="${fix_all}"/>
+    <xacro:right_outer_knuckle_joint prefix="${prefix}" fix_all="${fix_all}"/>
+
+    <xacro:unless value="${fix_all}">
+      <xacro:robotiq_140_gripper_transmission prefix="${prefix}"/>
+      <!--This xacro is used to be able to grasp object in simulmation more robustly, it could cause segfault at grasping time -->
+      <xacro:gazebo_gripper_grasp name="${prefix}grasp" name_prefix_left="${prefix}left_inner_finger" name_prefix_right="${prefix}right_inner_finger" parent_joint="${parent}"/>
+    </xacro:unless>
   </xacro:macro>
 </robot>
